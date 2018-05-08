@@ -4,11 +4,28 @@
   "version": "0.1.0",
   "description": "",
   "icon": {
-    "class": "glyphicon glyphicon-cog",
+    "class": "glyphicon glyphicon-wrench",
     "src": ""
   },
   "disableServerSideExecution": false,
   "disableBrowserSideExecution": false,
   "writeAccessRequired": false,
-  "configStructure": []
+  "configStructure": [
+    {
+      "name": "dry",
+      "displayName": "dry run",
+      "description": "If set to true only listing the potential fixes",
+      "value": true,
+      "valueType": "boolean",
+      "readOnly": false
+    },
+    {
+      "name": "srcOrDstSet",
+      "displayName": "Pointers with wrong multiplicity",
+      "description": "Check for sets, that probably should be pointers (as they have names like 'src', 'dst')",
+      "value": true,
+      "valueType": "boolean",
+      "readOnly": false
+    }
+  ]
 }

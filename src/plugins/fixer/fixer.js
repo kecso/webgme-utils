@@ -53,25 +53,61 @@ define([
      * @param {function(string, plugin.PluginResult)} callback - the result callback
      */
     fixer.prototype.main = function (callback) {
-        // Use self to access core, project, result, logger etc from PluginBase.
-        // These are all instantiated at this point.
-        this.pointerReport();
-        this.result.setSuccess(true);
-        callback(null,this.result);
+        var self = this,
+            config = this.getCurrentConfig(),
+            needCommit = false;
+
+        if (config.srcOrDstSet) {
+            needCommit = needCommit || this.srcOrDstSets(config.dry);
+        }
+
+        if (needCommit) {
+            this.save('Fixes made on the project.', function (err, status) {
+                if (err) {
+                    callback(err, self.result);
+                    return;
+                }
+
+                self.logger.info('saved returned with status', status);
+                self.result.setSuccess(true);
+                callback(null, self.result);
+            });
+        } else {
+            this.result.setSuccess(true);
+            callback(null, this.result);
+        }
+
     };
 
-    fixer.prototype.pointerReport = function(){
+    fixer.prototype.srcOrDstSets = function (dry) {
         var self = this,
             core = self.core,
             root = core.getRoot(self.activeNode),
             metaNodes = core.getAllMetaNodes(root),
             log = self.logger.info,
-            path;
+            madeChanges = false,
+            names, path, i, metaInfo, target;
 
-        for(path in metaNodes){
-            console.log(JSON.stringify(core.getOwnJsonMeta(metaNodes[path])));
+        for (path in metaNodes) {
+            names = core.getOwnValidSetNames(metaNodes[path]);
+            for (i = 0; i < names.length; i += 1) {
+                metaInfo = core.getPointerMeta(metaNodes[path], names[i]);
+                if ((names[i] === 'dst' || names[i] === 'src') && metaInfo.max !== 1) {
+                    self.createMessage(metaNodes[path], 'wrong cardinality for relation \'' + names[i] + '\'');
+                    if (!dry) {
+                        core.setPointerMetaLimits(metaNodes[path], names[i], 0, 1);
+                        madeChanges = true;
+                        for (target in metaInfo) {
+                            if (target !== 'min' && target !== 'max') {
+                                core.setPointerMetaTarget(metaNodes[path], names[i], metaNodes[target], 0, 1);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
+        return madeChanges;
     };
 
     return fixer;
