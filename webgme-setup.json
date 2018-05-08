@@ -1,0 +1,13 @@
+{
+  "components": {
+    "plugins": {
+      "fixer": {
+        "src": "src/plugins/fixer",
+        "test": "test/plugins/fixer"
+      }
+    }
+  },
+  "dependencies": {
+    "plugins": {}
+  }
+}
